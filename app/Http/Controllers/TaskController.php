@@ -3,11 +3,50 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Task;
+use App\Models\Task;
 use Illuminate\Support\Facades\Auth;
 
 class TaskController extends Controller
 {
+    public function sync(Request $request)
+    {
+        $response = array('status' => true);
+        $user = Auth::guard('api')->user();
+        $tasks = Task::where('user_id', $user->id)->get();
+        if(sizeof($tasks) > 0){
+            foreach($tasks as $task) {
+                $task->forceDelete();
+            }
+            
+        }
+        $count = -1;
+        foreach($request->columns as $column){
+            if(sizeof($column['tasks']) > 0){
+                foreach($column['tasks'] as $task_data){
+                    $task = new Task();
+                    $task->name = $task_data['name']?? "";
+                    $task->status = $column['name'];
+                    $task->description = $task_data['description']?? "";
+                    $task->priority = $count--;
+                    $task->user_id = $user->id;
+                    $task->save();
+                    $response['data'][] = $task;
+                }
+            } else {
+                $task = new Task();
+                $task->name = "";
+                $task->description = "";
+                $task->user_id = $user->id;
+                $task->status = $column['name'];
+                $task->priority = $count--;
+                $task->save();
+                $response['data'][] = $task;
+            }
+        }
+        $response['message'] = "Tasks sync";
+        return response()->json($response);
+    }
+
     public function get($task = false)
     {
         $user = Auth::guard('api')->user();
@@ -15,6 +54,18 @@ class TaskController extends Controller
         if ($task) {
             if ($task == "active") {
                 $data = $user->activeTasks;
+
+                $new_data = array();
+                $deadline_tasks = array();
+                foreach ($data as $i => $task) {
+                    if (date("Y-m-d", strtotime($task->deadline)) < date('Y-m-d')) {
+                        $deadline_tasks[] = $task;
+                    } else {
+                        $new_data[] = $task;
+                    }
+                }
+                $data = array_merge($new_data, $deadline_tasks);
+
             } else if($task == "done"){
                 $data = $user->doneTasks;
             } else if($task == "archive"){

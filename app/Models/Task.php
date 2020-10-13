@@ -1,6 +1,6 @@
 <?php
 
-namespace App;
+namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -16,11 +16,6 @@ class Task extends Model
     protected $fillable = ['name', 'description', 'priority', 'deadline'];
     protected $hidden = ['created_at', 'updated_at', 'deleted_at'];
 
-    /**
-     * The "booting" method of the model.
-     *
-     * @return void
-     */
     public static function boot()
     {
         parent::boot();

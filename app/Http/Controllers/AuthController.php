@@ -4,12 +4,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
-use App\User;
+use App\Setting\User;
 
 class AuthController extends Controller
 {
-    public function signup(Request $request)
-    {
+    public function signup(Request $request) {
         $request->validate([
             'email' => 'required|string|email|unique:users',
             'password' => 'required|string|confirmed'
@@ -19,6 +18,10 @@ class AuthController extends Controller
             'password' => bcrypt($request->password)
         ]);
         if ($user->save()) {
+            $settings = new Setting();
+            $settings->options = json_encode(config('user-settings.defaults'));
+            $settings->user_id = $user->id;
+            $setting->save();
             $tokenResult = $user->createToken('Personal Access Token');
             $token = $tokenResult->token;
             if ($request->remember_me) {
@@ -38,8 +41,7 @@ class AuthController extends Controller
         }
     }
   
-    public function login(Request $request)
-    {
+    public function login(Request $request) {
         $request->validate([
             'email' => 'required|string|email',
             'password' => 'required|string',
@@ -62,8 +64,7 @@ class AuthController extends Controller
         ]);
     }
   
-    public function logout(Request $request)
-    {
+    public function logout(Request $request) {
         $request->user()->token()->revoke();
         return response()->json([
             'status' => true,

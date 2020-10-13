@@ -25,6 +25,7 @@ Route::group(['prefix' => 'task'], function () {
     Route::group(['middleware' => 'auth:api'], function() {
         Route::get('/get/{task?}', 'TaskController@get');
         Route::post('/create', 'TaskController@create');
+        Route::post('/sync', 'TaskController@sync');
         Route::patch('/update/{task_id}', 'TaskController@patch');
         Route::put('/update/{task_id}', 'TaskController@update');
         Route::delete('/delete/{task_id}', 'TaskController@delete');
@@ -35,5 +36,7 @@ Route::group(['prefix' => 'task'], function () {
 Route::group(['prefix' => 'user'], function () {
     Route::group(['middleware' => 'auth:api'], function() {
         Route::get('/', 'UserController@get');
+        Route::put('/update', 'UserController@update');
+        Route::get('/settings', 'UserController@getSettings');
     });
 });
